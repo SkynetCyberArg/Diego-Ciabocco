@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diego Ciabocco - Aprende a tocar guitarra</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        // Datos de ejemplo - Canciones
+        const songsData = [
+            {
+                id: 1,
+                title: "Happy Birthday",
+                artist: "Traditional",
+                chords: ['C', 'G', 'F'],
+                lyrics: [
+                    { line: "Happy birthday to you", chords: [{ pos: 0, chord: 'C' }, { pos: 16, chord: 'G' }] },
+                    { line: "Happy birthday to you", chords: [{ pos: 16, chord: 'C' }] },
+                    { line: "Happy birthday dear friend", chords: [{ pos: 0, chord: 'F' }, { pos: 16, chord: 'C' }] },
+                    { line: "Happy birthday to you", chords: [{ pos: 0, chord: 'G' }, { pos: 16, chord: 'C' }] }
+                ],
+                tempo: 120,
+                difficulty: 'Principiante'
+            },
+            {
+                id: 2,
+                title: "Greensleeves",
+                artist: "Traditional English",
+                chords: ['Am', 'G', 'Em', 'C', 'E'],
+                lyrics: [
+                    { line: "Alas my love you do me wrong", chords: [{ pos: 0, chord: 'Am' }, { pos: 15, chord: 'G' }] },
+                    { line: "To cast me off discourteously", chords: [{ pos: 0, chord: 'Am' }, { pos: 20, chord: 'E' }] },
+                    { line: "For I have loved you oh so long", chords: [{ pos: 0, chord: 'Am' }, { pos: 17, chord: 'G' }] },
+                    { line: "Delighting in your company", chords: [{ pos: 0, chord: 'Am' }, { pos: 12, chord: 'E' }, { pos: 24, chord: 'Am' }] }
+                ],
+                tempo: 90,
+                difficulty: 'Principiante'
+            },
+            {
+                id: 3,
+                title: "Twinkle Twinkle",
+                artist: "Traditional",
+                chords: ['C', 'F', 'G'],
+                lyrics: [
+                    { line: "Twinkle twinkle little star", chords: [{ pos: 0, chord: 'C' }, { pos: 17, chord: 'F' }] },
+                    { line: "How I wonder what you are", chords: [{ pos: 0, chord: 'C' }, { pos: 10, chord: 'G' }, { pos: 22, chord: 'C' }] },
+                    { line: "Up above the world so high", chords: [{ pos: 0, chord: 'F' }, { pos: 16, chord: 'C' }] },
+                    { line: "Like a diamond in the sky", chords: [{ pos: 0, chord: 'F' }, { pos: 12, chord: 'G' }, { pos: 22, chord: 'C' }] }
+                ],
+                tempo: 100,
+                difficulty: 'Principiante'
+            },
+            {
+                id: 4,
+                title: "Flaca",
+                artist: "Andrés Calamaro",
+                chords: ['Em', 'D', 'C', 'G', 'Am', 'B7'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Em', 'D', 'C', 'D'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Em', 'D', 'C', 'D', 'Em', 'D', 'C', 'B7'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['G', 'D', 'Am', 'C', 'G', 'D', 'C', 'D'], repeat: 2 },
+                    { section: 'Puente', chords: ['Am', 'Em', 'Am', 'B7'], repeat: 1 }
+                ],
+                tempo: 95,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑↓↑'
+            },
+            {
+                id: 5,
+                title: "Los Chicos",
+                artist: "Andrés Calamaro",
+                chords: ['A', 'D', 'E', 'F#m', 'Bm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['A', 'D', 'A', 'E'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['A', 'D', 'A', 'E', 'F#m', 'D', 'E', 'A'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['D', 'A', 'E', 'F#m', 'D', 'A', 'Bm', 'E'], repeat: 2 },
+                    { section: 'Puente', chords: ['F#m', 'D', 'A', 'E'], repeat: 1 }
+                ],
+                tempo: 120,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓ ↓↑ ↑↓↑'
+            },
+            {
+                id: 6,
+                title: "Loco",
+                artist: "Andrés Calamaro",
+                chords: ['G', 'D', 'Em', 'C', 'Am', 'Bm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['G', 'D', 'Em', 'C'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['G', 'D', 'Em', 'C', 'G', 'D', 'Am', 'D'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['Em', 'C', 'G', 'D', 'Em', 'C', 'Am', 'D'], repeat: 2 },
+                    { section: 'Puente', chords: ['Bm', 'C', 'Am', 'D'], repeat: 1 }
+                ],
+                tempo: 110,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑ ↓↑'
+            },
+            {
+                id: 7,
+                title: "Paloma",
+                artist: "Andrés Calamaro",
+                chords: ['C', 'F', 'G', 'Am', 'Dm', 'E7'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['C', 'F', 'G', 'C'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['C', 'Am', 'F', 'G', 'C', 'Am', 'Dm', 'G'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['F', 'G', 'C', 'Am', 'F', 'G', 'E7', 'Am'], repeat: 2 },
+                    { section: 'Puente', chords: ['Dm', 'G', 'C', 'Am', 'Dm', 'G', 'C'], repeat: 1 }
+                ],
+                tempo: 100,
+                difficulty: 'Principiante',
+                capo: 0,
+                strumming: '↓ ↓ ↓↑ ↓↑'
+            },
+            {
+                id: 8,
+                title: "Media Veronica",
+                artist: "Andrés Calamaro",
+                chords: ['A', 'E', 'D', 'F#m', 'Bm', 'C#m'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['A', 'E', 'D', 'A'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['A', 'E', 'F#m', 'D', 'A', 'E', 'D', 'E'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['D', 'A', 'E', 'F#m', 'D', 'A', 'Bm', 'E'], repeat: 2 },
+                    { section: 'Interludio', chords: ['C#m', 'F#m', 'Bm', 'E'], repeat: 1 },
+                    { section: 'Puente', chords: ['F#m', 'D', 'A', 'E'], repeat: 1 }
+                ],
+                tempo: 105,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑↓ ↑↓↑'
+            },
+            {
+                id: 9,
+                title: "Solo le pido a Dios",
+                artist: "León Gieco",
+                chords: ['C', 'F', 'G', 'Am', 'Em', 'Dm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['C', 'F', 'C', 'G'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['C', 'F', 'C', 'G', 'Am', 'Em', 'F', 'G'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['C', 'F', 'G', 'C', 'Am', 'Dm', 'G', 'C'], repeat: 2 },
+                    { section: 'Puente', chords: ['F', 'G', 'Em', 'Am', 'F', 'G', 'C'], repeat: 1 }
+                ],
+                tempo: 85,
+                difficulty: 'Principiante',
+                capo: 0,
+                strumming: '↓ ↓ ↓↑ ↓↑'
+            },
+            {
+                id: 10,
+                title: "La Cultura es la Sonrisa",
+                artist: "León Gieco",
+                chords: ['D', 'A', 'G', 'Bm', 'Em'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['D', 'A', 'G', 'D'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['D', 'A', 'Bm', 'G', 'D', 'A', 'G', 'A'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['G', 'D', 'A', 'Bm', 'G', 'D', 'Em', 'A'], repeat: 2 },
+                    { section: 'Puente', chords: ['Bm', 'G', 'D', 'A'], repeat: 1 }
+                ],
+                tempo: 95,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑↓↑'
+            },
+            {
+                id: 11,
+                title: "Pensar en Nada",
+                artist: "León Gieco",
+                chords: ['Em', 'Am', 'D', 'G', 'C', 'B7'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Em', 'Am', 'Em', 'B7'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Em', 'Am', 'D', 'G', 'C', 'Am', 'B7', 'Em'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['G', 'D', 'Em', 'C', 'G', 'Am', 'B7', 'Em'], repeat: 2 },
+                    { section: 'Puente', chords: ['Am', 'D', 'G', 'C', 'Am', 'B7'], repeat: 1 }
+                ],
+                tempo: 90,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓ ↓↑ ↑↓↑'
+            },
+            {
+                id: 12,
+                title: "El Fantasma de Canterville",
+                artist: "León Gieco",
+                chords: ['A', 'D', 'E', 'F#m', 'Bm', 'C#m'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['A', 'D', 'A', 'E'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['A', 'D', 'F#m', 'E', 'A', 'D', 'Bm', 'E'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['D', 'A', 'E', 'F#m', 'D', 'A', 'C#m', 'E'], repeat: 2 },
+                    { section: 'Puente', chords: ['F#m', 'Bm', 'D', 'E'], repeat: 1 }
+                ],
+                tempo: 110,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↓ ↓↑'
+            },
+            {
+                id: 13,
+                title: "Cinco Siglos Igual",
+                artist: "León Gieco",
+                chords: ['Am', 'G', 'F', 'C', 'Em', 'Dm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Am', 'G', 'F', 'Am'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Am', 'G', 'F', 'C', 'Am', 'Em', 'Dm', 'Am'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['F', 'C', 'G', 'Am', 'F', 'C', 'Dm', 'Am'], repeat: 2 },
+                    { section: 'Puente', chords: ['Em', 'F', 'G', 'Am'], repeat: 1 }
+                ],
+                tempo: 100,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓ ↓↑ ↓↑'
+            },
+            {
+                id: 14,
+                title: "De Musica Ligera",
+                artist: "Soda Stereo",
+                chords: ['E', 'A', 'B', 'C#m', 'F#m', 'G#m'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['E', 'A', 'E', 'B'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['E', 'A', 'C#m', 'B', 'E', 'A', 'F#m', 'B'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['A', 'E', 'B', 'C#m', 'A', 'E', 'F#m', 'B'], repeat: 2 },
+                    { section: 'Puente', chords: ['C#m', 'G#m', 'A', 'B'], repeat: 1 }
+                ],
+                tempo: 130,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑ ↓↑'
+            },
+            {
+                id: 15,
+                title: "Persiana Americana",
+                artist: "Soda Stereo",
+                chords: ['Am', 'F', 'C', 'G', 'Em', 'Dm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Am', 'F', 'C', 'G'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Am', 'F', 'C', 'G', 'Am', 'F', 'Dm', 'G'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['F', 'C', 'G', 'Am', 'F', 'C', 'Em', 'G'], repeat: 2 },
+                    { section: 'Puente', chords: ['Dm', 'Am', 'F', 'G'], repeat: 1 }
+                ],
+                tempo: 120,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↓ ↓↑'
+            },
+            {
+                id: 16,
+                title: "En la Ciudad de la Furia",
+                artist: "Soda Stereo",
+                chords: ['Dm', 'Am', 'C', 'G', 'F', 'Bb'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Dm', 'Am', 'C', 'G'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Dm', 'Am', 'C', 'G', 'Dm', 'Am', 'F', 'G'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['C', 'G', 'Am', 'F', 'C', 'G', 'Dm', 'G'], repeat: 2 },
+                    { section: 'Puente', chords: ['Bb', 'F', 'C', 'G'], repeat: 1 }
+                ],
+                tempo: 95,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓ ↓↑ ↑↓↑'
+            },
+            {
+                id: 17,
+                title: "Prófugos",
+                artist: "Soda Stereo",
+                chords: ['Em', 'G', 'D', 'C', 'Am', 'B7'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Em', 'G', 'D', 'C'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Em', 'G', 'D', 'C', 'Em', 'G', 'Am', 'B7'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['G', 'D', 'Em', 'C', 'G', 'D', 'Am', 'B7'], repeat: 2 },
+                    { section: 'Puente', chords: ['Am', 'Em', 'C', 'B7'], repeat: 1 }
+                ],
+                tempo: 115,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑ ↓↑'
+            },
+            {
+                id: 18,
+                title: "En Remolinos",
+                artist: "Soda Stereo",
+                chords: ['A', 'E', 'D', 'F#m', 'Bm', 'C#m'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['A', 'E', 'D', 'A'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['A', 'E', 'F#m', 'D', 'A', 'E', 'Bm', 'E'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['D', 'A', 'E', 'F#m', 'D', 'A', 'C#m', 'E'], repeat: 2 },
+                    { section: 'Puente', chords: ['F#m', 'D', 'A', 'E'], repeat: 1 }
+                ],
+                tempo: 105,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑↓ ↑↓↑'
+            },
+            {
+                id: 19,
+                title: "Afterlife",
+                artist: "Avenged Sevenfold",
+                chords: ['Am', 'F', 'C', 'G', 'Em', 'Dm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Am', 'F', 'C', 'G'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Am', 'F', 'C', 'G', 'Am', 'F', 'Dm', 'E'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['F', 'C', 'G', 'Am', 'F', 'C', 'Em', 'G'], repeat: 2 },
+                    { section: 'Puente', chords: ['Dm', 'Am', 'F', 'G'], repeat: 1 },
+                    { section: 'Solo', chords: ['Am', 'F', 'C', 'G'], repeat: 2 }
+                ],
+                tempo: 115,
+                difficulty: 'Avanzado',
+                capo: 0,
+                strumming: '↓↓ ↓↓ ↓↓ ↓↓ (Palm Mute)'
+            },
+            {
+                id: 20,
+                title: "Dear God",
+                artist: "Avenged Sevenfold",
+                chords: ['G', 'D', 'Em', 'C', 'Am', 'Bm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['G', 'D', 'Em', 'C'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['G', 'D', 'Em', 'C', 'G', 'D', 'Am', 'D'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['C', 'G', 'D', 'Em', 'C', 'G', 'Bm', 'D'], repeat: 2 },
+                    { section: 'Puente', chords: ['Em', 'C', 'G', 'D'], repeat: 1 }
+                ],
+                tempo: 105,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑↓↑'
+            },
+            {
+                id: 21,
+                title: "Nightmare",
+                artist: "Avenged Sevenfold",
+                chords: ['Em', 'D', 'C', 'G', 'Am', 'B'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Em', 'D', 'C', 'B'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Em', 'D', 'C', 'G', 'Em', 'D', 'Am', 'B'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['C', 'G', 'D', 'Em', 'C', 'G', 'Am', 'B'], repeat: 2 },
+                    { section: 'Puente', chords: ['Am', 'Em', 'D', 'B'], repeat: 1 },
+                    { section: 'Solo', chords: ['Em', 'D', 'C', 'B'], repeat: 4 }
+                ],
+                tempo: 168,
+                difficulty: 'Avanzado',
+                capo: 0,
+                strumming: '↓↓ ↓↓ ↓↓ ↓↓ (Heavy)'
+            },
+            {
+                id: 22,
+                title: "Hail to the King",
+                artist: "Avenged Sevenfold",
+                chords: ['Dm', 'C', 'Bb', 'A', 'F', 'Gm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Dm', 'C', 'Bb', 'A'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Dm', 'C', 'Bb', 'F', 'Dm', 'C', 'Gm', 'A'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['Bb', 'F', 'C', 'Dm', 'Bb', 'F', 'Gm', 'A'], repeat: 2 },
+                    { section: 'Puente', chords: ['Gm', 'Dm', 'Bb', 'A'], repeat: 1 }
+                ],
+                tempo: 130,
+                difficulty: 'Avanzado',
+                capo: 0,
+                strumming: '↓ ↓ ↓ ↓ (Power Chords)'
+            },
+            {
+                id: 23,
+                title: "So Far Away",
+                artist: "Avenged Sevenfold",
+                chords: ['G', 'Em', 'C', 'D', 'Am', 'Bm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['G', 'Em', 'C', 'D'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['G', 'Em', 'C', 'D', 'G', 'Em', 'Am', 'D'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['C', 'G', 'D', 'Em', 'C', 'G', 'Bm', 'D'], repeat: 2 },
+                    { section: 'Puente', chords: ['Em', 'C', 'G', 'D'], repeat: 1 },
+                    { section: 'Solo', chords: ['G', 'Em', 'C', 'D'], repeat: 4 }
+                ],
+                tempo: 92,
+                difficulty: 'Intermedio',
+                capo: 0,
+                strumming: '↓ ↓↑ ↑↓ ↑↓↑'
+            },
+            {
+                id: 24,
+                title: "Seize the Day",
+                artist: "Avenged Sevenfold",
+                chords: ['A', 'E', 'F#m', 'D', 'Bm', 'C#m'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['A', 'E', 'F#m', 'D'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['A', 'E', 'F#m', 'D', 'A', 'E', 'Bm', 'E'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['D', 'A', 'E', 'F#m', 'D', 'A', 'C#m', 'E'], repeat: 2 },
+                    { section: 'Puente', chords: ['F#m', 'D', 'A', 'E'], repeat: 1 },
+                    { section: 'Solo', chords: ['A', 'E', 'F#m', 'D'], repeat: 4 }
+                ],
+                tempo: 135,
+                difficulty: 'Avanzado',
+                capo: 0,
+                strumming: '↓ ↓↑ ↓ ↓↑'
+            },
+            {
+                id: 25,
+                title: "Bat Country",
+                artist: "Avenged Sevenfold",
+                chords: ['Em', 'C', 'G', 'D', 'Am', 'B7'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Em', 'C', 'G', 'D'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Em', 'C', 'G', 'D', 'Em', 'C', 'Am', 'B7'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['C', 'G', 'D', 'Em', 'C', 'G', 'Am', 'B7'], repeat: 2 },
+                    { section: 'Puente', chords: ['Am', 'Em', 'C', 'D'], repeat: 1 },
+                    { section: 'Solo', chords: ['Em', 'C', 'G', 'D'], repeat: 4 }
+                ],
+                tempo: 186,
+                difficulty: 'Avanzado',
+                capo: 0,
+                strumming: '↓↓ ↓↓ ↓↓ ↓↓ (Fast)'
+            },
+            {
+                id: 26,
+                title: "A Little Piece of Heaven",
+                artist: "Avenged Sevenfold",
+                chords: ['Am', 'E', 'F', 'C', 'G', 'Dm'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Am', 'E', 'F', 'C'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Am', 'E', 'F', 'C', 'Am', 'G', 'Dm', 'E'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['F', 'C', 'G', 'Am', 'F', 'C', 'Dm', 'E'], repeat: 2 },
+                    { section: 'Puente', chords: ['Dm', 'Am', 'E', 'F'], repeat: 1 },
+                    { section: 'Outro', chords: ['Am', 'E', 'F', 'C'], repeat: 2 }
+                ],
+                tempo: 155,
+                difficulty: 'Avanzado',
+                capo: 0,
+                strumming: '↓ ↓ ↓↑ ↓ ↓↑'
+            },
+            {
+                id: 27,
+                title: "Unholy Confessions",
+                artist: "Avenged Sevenfold",
+                chords: ['D', 'A', 'G', 'Bm', 'Em', 'F#m'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['D', 'A', 'G', 'Bm'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['D', 'A', 'Bm', 'G', 'D', 'A', 'Em', 'A'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['G', 'D', 'A', 'Bm', 'G', 'D', 'F#m', 'A'], repeat: 2 },
+                    { section: 'Puente', chords: ['Em', 'Bm', 'G', 'A'], repeat: 1 },
+                    { section: 'Solo', chords: ['D', 'A', 'G', 'Bm'], repeat: 4 }
+                ],
+                tempo: 190,
+                difficulty: 'Avanzado',
+                capo: 0,
+                strumming: '↓↓ ↓↓ ↓↓ ↓↓ (Very Fast)'
+            },
+            {
+                id: 28,
+                title: "The Stage",
+                artist: "Avenged Sevenfold",
+                chords: ['Em', 'Am', 'D', 'G', 'C', 'B'],
+                lyrics: null,
+                structure: [
+                    { section: 'Intro', chords: ['Em', 'Am', 'D', 'G'], repeat: 2 },
+                    { section: 'Estrofa', chords: ['Em', 'Am', 'D', 'G', 'Em', 'C', 'B', 'Em'], repeat: 2 },
+                    { section: 'Estribillo', chords: ['C', 'G', 'D', 'Em', 'C', 'G', 'Am', 'B'], repeat: 2 },
+                    { section: 'Puente', chords: ['Am', 'D', 'G', 'C', 'Am', 'B'], repeat: 1 },
+                    { section: 'Solo', chords: ['Em', 'Am', 'D', 'G'], repeat: 6 }
+                ],
+                tempo: 140,
+                difficulty: 'Avanzado',
+                capo: 0,
+                strumming: '↓ ↓ ↓ ↓ (Progressive)'
+            }
+        ];
+
+        // Datos de acordes
+        const chordsData = {
+            'C': { name: 'Do Mayor', notes: ['C', 'E', 'G'], fingers: [0, 3, 2, 0, 1, 0], fret: 0 },
+            'G': { name: 'Sol Mayor', notes: ['G', 'B', 'D'], fingers: [3, 2, 0, 0, 0, 3], fret: 0 },
+            'F': { name: 'Fa Mayor', notes: ['F', 'A', 'C'], fingers: [1, 3, 3, 2, 1, 1], fret: 0 },
+            'Am': { name: 'La menor', notes: ['A', 'C', 'E'], fingers: [0, 0, 2, 2, 1, 0], fret: 0 },
+            'Em': { name: 'Mi menor', notes: ['E', 'G', 'B'], fingers: [0, 2, 2, 0, 0, 0], fret: 0 },
+            'E': { name: 'Mi Mayor', notes: ['E', 'G#', 'B'], fingers: [0, 2, 2, 1, 0, 0], fret: 0 },
+            'D': { name: 'Re Mayor', notes: ['D', 'F#', 'A'], fingers: [-1, 0, 0, 2, 3, 2], fret: 0 },
+            'B7': { name: 'Si séptima', notes: ['B', 'D#', 'F#', 'A'], fingers: [-1, 2, 1, 2, 0, 2], fret: 0 },
+            'A': { name: 'La Mayor', notes: ['A', 'C#', 'E'], fingers: [0, 0, 2, 2, 2, 0], fret: 0 },
+            'F#m': { name: 'Fa# menor', notes: ['F#', 'A', 'C#'], fingers: [2, 4, 4, 2, 2, 2], fret: 0 },
+            'Bm': { name: 'Si menor', notes: ['B', 'D', 'F#'], fingers: [-1, 2, 4, 4, 3, 2], fret: 0 },
+            'Dm': { name: 'Re menor', notes: ['D', 'F', 'A'], fingers: [-1, 0, 0, 2, 3, 1], fret: 0 },
+            'E7': { name: 'Mi séptima', notes: ['E', 'G#', 'B', 'D'], fingers: [0, 2, 0, 1, 0, 0], fret: 0 },
+            'C#m': { name: 'Do# menor', notes: ['C#', 'E', 'G#'], fingers: [-1, 4, 6, 6, 5, 4], fret: 0 },
+            'B': { name: 'Si Mayor', notes: ['B', 'D#', 'F#'], fingers: [-1, 2, 4, 4, 4, 2], fret: 0 },
+            'G#m': { name: 'Sol# menor', notes: ['G#', 'B', 'D#'], fingers: [4, 6, 6, 4, 4, 4], fret: 0 },
+            'Bb': { name: 'Si bemol Mayor', notes: ['Bb', 'D', 'F'], fingers: [-1, 1, 3, 3, 3, 1], fret: 0 }
+        };
+
+        // Iconos SVG
+        const MusicIcon = () => (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+        );
+
+        const UserIcon = () => (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        );
+
+        const SearchIcon = () => (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        );
+
+        const HomeIcon = () => (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+        );
+
+        const ArrowLeftIcon = () => (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+        );
+
+        // Componente para diagramas de acordes
+        const ChordDiagram = ({ chord }) => {
+            const chordInfo = chordsData[chord];
+            if (!chordInfo) return null;
+
+            const strings = 6;
+            const frets = 5;
+            const width = 120;
+            const height = 140;
+            const startX = 20;
+            const startY = 30;
+            const stringSpacing = (width - 40) / (strings - 1);
+            const fretSpacing = (height - 50) / frets;
+
+            return (
+                <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-md">
+                    <h3 className="text-lg font-bold mb-1">{chord}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{chordInfo.name}</p>
+                    <svg width={width} height={height} className="border border-gray-200 rounded">
+                        {[...Array(strings)].map((_, i) => (
+                            <line
+                                key={`string-${i}`}
+                                x1={startX + i * stringSpacing}
+                                y1={startY}
+                                x2={startX + i * stringSpacing}
+                                y2={startY + fretSpacing * frets}
+                                stroke="#333"
+                                strokeWidth="1.5"
+                            />
+                        ))}
+                        
+                        {[...Array(frets + 1)].map((_, i) => (
+                            <line
+                                key={`fret-${i}`}
+                                x1={startX}
+                                y1={startY + i * fretSpacing}
+                                x2={startX + (strings - 1) * stringSpacing}
+                                y2={startY + i * fretSpacing}
+                                stroke="#333"
+                                strokeWidth={i === 0 ? "3" : "1.5"}
+                            />
+                        ))}
+
+                        {chordInfo.fingers.map((fret, stringIdx) => {
+                            if (fret === -1) {
+                                return (
+                                    <text
+                                        key={`finger-${stringIdx}`}
+                                        x={startX + stringIdx * stringSpacing}
+                                        y={startY - 12}
+                                        textAnchor="middle"
+                                        fontSize="16"
+                                        fill="#666"
+                                    >
+                                        ×
+                                    </text>
+                                );
+                            } else if (fret === 0) {
+                                return (
+                                    <circle
+                                        key={`finger-${stringIdx}`}
+                                        cx={startX + stringIdx * stringSpacing}
+                                        cy={startY - 12}
+                                        r="4"
+                                        fill="none"
+                                        stroke="#333"
+                                        strokeWidth="2"
+                                    />
+                                );
+                            } else if (fret > 0) {
+                                return (
+                                    <circle
+                                        key={`finger-${stringIdx}`}
+                                        cx={startX + stringIdx * stringSpacing}
+                                        cy={startY + (fret - 0.5) * fretSpacing}
+                                        r="8"
+                                        fill="#2563eb"
+                                    />
+                                );
+                            }
+                            return null;
+                        })}
+                    </svg>
+                    <p className="text-xs text-gray-500 mt-2">Notas: {chordInfo.notes.join(' - ')}</p>
+                </div>
+            );
+        };
+
+        // Página principal
+        const HomePage = ({ onSelectSong }) => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [filterType, setFilterType] = useState('song');
+
+            const artists = useMemo(() => 
+                [...new Set(songsData.map(song => song.artist))].sort(),
+                []
+            );
+
+            const filteredSongs = useMemo(() => {
+                if (!searchTerm) return songsData;
+                
+                const term = searchTerm.toLowerCase();
+                return songsData.filter(song => 
+                    filterType === 'song' 
+                        ? song.title.toLowerCase().includes(term)
+                        : song.artist.toLowerCase().includes(term)
+                );
+            }, [searchTerm, filterType]);
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+                    <header className="bg-white shadow-md">
+                        <div className="container mx-auto px-4 py-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                    <div className="text-blue-600"><MusicIcon /></div>
+                                    <h1 className="text-3xl font-bold text-gray-800">Diego Ciabocco</h1>
+                                </div>
+                                <nav className="hidden md:flex space-x-6">
+                                    <button className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition">
+                                        <HomeIcon />
+                                        <span>Inicio</span>
+                                    </button>
+                                </nav>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="container mx-auto px-4 py-12">
+                        <div className="max-w-4xl mx-auto">
+                            <div className="text-center mb-12">
+                                <h2 className="text-4xl font-bold text-gray-800 mb-4">
+                                    Aprende a tocar guitarra
+                                </h2>
+                                <p className="text-lg text-gray-600">
+                                    Encuentra acordes y tablaturas de tus canciones favoritas
+                                </p>
+                            </div>
+
+                            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                                <div className="flex justify-center space-x-4 mb-6">
+                                    <button
+                                        onClick={() => setFilterType('song')}
+                                        className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition ${
+                                            filterType === 'song'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        }`}
+                                    >
+                                        <MusicIcon />
+                                        <span>Por Canción</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setFilterType('artist')}
+                                        className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition ${
+                                            filterType === 'artist'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        }`}
+                                    >
+                                        <UserIcon />
+                                        <span>Por Artista</span>
+                                    </button>
+                                </div>
+
+                                <div className="relative">
+                                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                        <SearchIcon />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder={filterType === 'song' ? 'Buscar canción...' : 'Buscar artista...'}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition"
+                                    />
+                                </div>
+
+                                {filterType === 'artist' && !searchTerm && (
+                                    <div className="mt-6">
+                                        <h3 className="text-lg font-semibold mb-3 text-gray-700">Artistas disponibles:</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {artists.map(artist => (
+                                                <button
+                                                    key={artist}
+                                                    onClick={() => setSearchTerm(artist)}
+                                                    className="p-4 bg-gray-50 rounded-lg hover:bg-blue-50 hover:border-blue-300 border-2 border-transparent transition text-left"
+                                                >
+                                                    <div className="flex items-center space-x-2">
+                                                        <UserIcon />
+                                                        <span className="font-medium">{artist}</span>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredSongs.map(song => (
+                                    <button
+                                        key={song.id}
+                                        onClick={() => onSelectSong(song.id)}
+                                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl hover:scale-105 transition transform text-left"
+                                    >
+                                        <div className="flex items-start space-x-3 mb-3">
+                                            <div className="text-blue-600 flex-shrink-0 mt-1">
+                                                <MusicIcon />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-800 mb-1">{song.title}</h3>
+                                                <p className="text-gray-600">{song.artist}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mt-4">
+                                            {song.chords.map(chord => (
+                                                <span
+                                                    key={chord}
+                                                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold"
+                                                >
+                                                    {chord}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {filteredSongs.length === 0 && (
+                                <div className="text-center py-12">
+                                    <p className="text-xl text-gray-500">No se encontraron canciones</p>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        // Página de detalle
+        const SongDetailPage = ({ songId, onBack }) => {
+            const song = songsData.find(s => s.id === songId);
+            
+            if (!song) return null;
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+                    <header className="bg-white shadow-md">
+                        <div className="container mx-auto px-4 py-6">
+                            <button
+                                onClick={onBack}
+                                className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition mb-4"
+                            >
+                                <ArrowLeftIcon />
+                                <span>Volver</span>
+                            </button>
+                            <div className="flex items-center space-x-3">
+                                <div className="text-blue-600">
+                                    <MusicIcon />
+                                </div>
+                                <div>
+                                    <h1 className="text-3xl font-bold text-gray-800">{song.title}</h1>
+                                    <p className="text-gray-600">{song.artist}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="container mx-auto px-4 py-8">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6">Acordes utilizados</h2>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                    {song.chords.map(chord => (
+                                        <ChordDiagram key={chord} chord={chord} />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-2xl shadow-xl p-8">
+                                {song.lyrics ? (
+                                    <>
+                                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Letra con acordes</h2>
+                                        <div className="font-mono text-lg space-y-6">
+                                            {song.lyrics.map((lyricLine, idx) => (
+                                                <div key={idx} className="relative">
+                                                    <div className="text-blue-600 font-bold mb-1 whitespace-pre">
+                                                        {lyricLine.chords.map((chordPos, chordIdx) => (
+                                                            <span
+                                                                key={chordIdx}
+                                                                style={{ 
+                                                                    position: 'absolute',
+                                                                    left: `${chordPos.pos * 0.6}em`
+                                                                }}
+                                                            >
+                                                                {chordPos.chord}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                    <div className="text-gray-800 mt-6">
+                                                        {lyricLine.line}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Estructura de la canción</h2>
+                                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                                            <p className="text-sm text-gray-700">
+                                                <span className="font-semibold">Nota:</span> Por derechos de autor, no podemos mostrar la letra completa. 
+                                                Aquí tienes la estructura y progresión de acordes para que puedas tocarla.
+                                            </p>
+                                        </div>
+                                        <div className="space-y-6">
+                                            {song.structure.map((section, idx) => (
+                                                <div key={idx} className="border-l-4 border-blue-500 pl-6 py-2">
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <h3 className="text-xl font-bold text-gray-800">{section.section}</h3>
+                                                        {section.repeat > 1 && (
+                                                            <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                                                                x{section.repeat}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-3">
+                                                        {section.chords.map((chord, chordIdx) => (
+                                                            <span
+                                                                key={chordIdx}
+                                                                className="font-mono text-lg font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-lg"
+                                                            >
+                                                                {chord}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {song.strumming && (
+                                            <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+                                                <h3 className="text-lg font-bold text-gray-800 mb-2">Patrón de rasgueo sugerido:</h3>
+                                                <p className="font-mono text-2xl text-blue-600">{song.strumming}</p>
+                                                <p className="text-sm text-gray-600 mt-2">↓ = Abajo | ↑ = Arriba</p>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="bg-white rounded-2xl shadow-xl p-8 mt-8">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Información</h2>
+                                <div className="space-y-2 text-gray-700">
+                                    <p><span className="font-semibold">Tempo:</span> {song.tempo} BPM</p>
+                                    <p><span className="font-semibold">Nivel:</span> {song.difficulty || 'Principiante'}</p>
+                                    <p><span className="font-semibold">Acordes:</span> {song.chords.join(', ')}</p>
+                                    {song.capo !== undefined && (
+                                        <p><span className="font-semibold">Capo:</span> {song.capo === 0 ? 'No requiere' : `Traste ${song.capo}`}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        // App principal
+        const App = () => {
+            const [currentView, setCurrentView] = useState('home');
+            const [selectedSongId, setSelectedSongId] = useState(null);
+
+            const handleSelectSong = (songId) => {
+                setSelectedSongId(songId);
+                setCurrentView('detail');
+            };
+
+            const handleBack = () => {
+                setCurrentView('home');
+                setSelectedSongId(null);
+            };
+
+            return (
+                <div>
+                    {currentView === 'home' ? (
+                        <HomePage onSelectSong={handleSelectSong} />
+                    ) : (
+                        <SongDetailPage songId={selectedSongId} onBack={handleBack} />
+                    )}
+                </div>
+            );
+        };
+
+        // Renderizar la aplicación
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
